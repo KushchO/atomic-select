@@ -46,6 +46,8 @@ var customicSelect = (function() {
   function createListWrapper(select) {
     var selectСlassList = select.classList;
     var listWrapper = document.createElement('div');
+    listWrapper.classList.add('custom-select__wrapper');
+    listWrapper.setAttribute('tabindex', '-1');
     selectСlassList.forEach(function(className) {
       listWrapper.classList.add(className);
     });
@@ -56,11 +58,17 @@ var customicSelect = (function() {
   customSelects.forEach(function(select) {
     select.parentElement.appendChild(createListWrapper(select));
     hideOriginalSelect(select);
-    var customSelect = document.querySelector('.custom-select__wrapper');
-    var selectList = customSelect.querySelector('.custom-select__list');
-    var selectInput = customSelect.querySelector('.custom-select__input');
-    var selectOptions = customSelect.querySelectorAll('.custom-select__option');
+    var selectWrapper = select.parentElement;
+    var customSelect = selectWrapper.querySelector('.custom-select__wrapper');
+    customSelect.setAttribute('tabindex', '0');
+    var selectList = selectWrapper.querySelector('.custom-select__list');
+    var selectInput = selectWrapper.querySelector('.custom-select__input');
+    var selectOptions = selectWrapper.querySelectorAll(
+      '.custom-select__option'
+    );
     var optionsNumber = selectOptions.length;
+    console.log(customSelect);
+    customSelect.insertBefore(selectInput, selectList);
     var state = {
       status: 'closed',
       activOption: 'default'
@@ -121,6 +129,11 @@ var customicSelect = (function() {
             toggleCustomSelect();
           }
           break;
+        case 'Tab':
+          if (state.status === 'expanded') {
+            toggleCustomSelect();
+          }
+          break;
         case 'Enter':
           if (state.status === 'expanded') {
             if (state.activOption !== 'default') {
@@ -171,10 +184,12 @@ var customicSelect = (function() {
       document.addEventListener('keyup', keyActions);
     });
 
-    customSelect.addEventListener('focusout', function() {
-      document.removeEventListener('keyup', keyActions);
-      if (state.status === 'expanded') {
-        toggleCustomSelect();
+    document.addEventListener('click', function(e) {
+      var target = e.target;
+      if (target !== customSelect && !customSelect.contains(target)) {
+        if (state.status === 'expanded') {
+          toggleCustomSelect();
+        }
       }
     });
   });
