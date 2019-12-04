@@ -130,9 +130,7 @@ var customicSelect = (function() {
           }
           break;
         case 'Tab':
-          if (state.status === 'expanded') {
-            toggleCustomSelect();
-          }
+          closeAndRemoveKeyListener(event);
           break;
         case 'Enter':
           if (state.status === 'expanded') {
@@ -180,17 +178,22 @@ var customicSelect = (function() {
       }
     }
 
-    customSelect.addEventListener('focusin', function() {
-      document.addEventListener('keyup', keyActions);
-    });
-
-    document.addEventListener('click', function(e) {
+    function closeAndRemoveKeyListener(e) {
       var target = e.target;
       if (target !== customSelect && !customSelect.contains(target)) {
         if (state.status === 'expanded') {
           toggleCustomSelect();
         }
+        document.removeEventListener('keyup', keyActions);
       }
+    }
+
+    customSelect.addEventListener('focusin', function() {
+      document.addEventListener('keyup', keyActions);
+    });
+
+    document.addEventListener('click', function(e) {
+      closeAndRemoveKeyListener(e);
     });
   });
 })();
