@@ -11,6 +11,7 @@
   width: initial;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .custom-select__list {
@@ -18,10 +19,16 @@
   margin: 0;
   padding-left: 0;
   padding-top: 10px;
-  margin-top: -5px;
+  position: absolute;
+  width: 100%;
+  top: 23px;
+  box-sizing: border-box;
+  background-color: #ffffff;
   border-radius: 4px;
   border: 1px solid #000000;
   z-index: 5;
+  max-height: 240px;
+  overflow-y: scroll;
 }
 
 .custom-select__input {
@@ -35,10 +42,11 @@
   padding: 5px 10px;
 }
 
-.custom-select__option:focus {
+.custom-select__option:focus,
+.custom-select__option--active {
   background-color: #eeeeee;
 }
 
 .custom-select__option:hover {
-  background-color: #eeeeee;
+  background-color: #e3e3e3;
 }

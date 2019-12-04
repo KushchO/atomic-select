@@ -12,7 +12,7 @@ var customicSelect = (function() {
   function createInput(option) {
     var selectInput = document.createElement('input');
     selectInput.classList.add('custom-select__input');
-    selectInput.value = option.text;
+    selectInput.placeholder = option.text;
     selectInput.setAttribute('aria-label', option.text);
     return selectInput;
   }
@@ -25,6 +25,7 @@ var customicSelect = (function() {
     selectOptions.forEach(function(option, index) {
       if (index === 0) {
         select.parentElement.appendChild(createInput(option));
+        select.value = option.text;
       } else {
         selectList.appendChild(creatSelectOption(option));
       }
@@ -56,6 +57,14 @@ var customicSelect = (function() {
   }
 
   customSelects.forEach(function(select) {
+    var state = {
+      status: 'initial',
+      activOption: 'default',
+      countClicks: 0,
+      inputValue: '',
+      options: [],
+      renderedOptions: []
+    };
     select.parentElement.appendChild(createListWrapper(select));
     hideOriginalSelect(select);
     var selectWrapper = select.parentElement;
@@ -67,31 +76,54 @@ var customicSelect = (function() {
       '.custom-select__option'
     );
     var optionsNumber = selectOptions.length;
-    console.log(customSelect);
     customSelect.insertBefore(selectInput, selectList);
-    var state = {
-      status: 'closed',
-      activOption: 'default'
-    };
-
-    function toggleCustomSelect() {
-      selectList.classList.toggle('custom-select__hidden');
-      state.status = state.status === 'closed' ? 'expanded' : 'closed';
-      if (state.status === 'expanded') {
-        if (state.activOption !== 'default')
-          selectOptions[state.activOption].focus();
-      }
-    }
-
-    selectInput.addEventListener('click', toggleCustomSelect);
 
     selectOptions.forEach(function(item, index) {
+      state.options.push(item);
+      state.renderedOptions.push(item);
       item.addEventListener('click', function() {
+        selectOptions.forEach(function(item) {
+          if (item.classList.contains('custom-select__option--active')) {
+            item.classList.remove('custom-select__option--active');
+          }
+        });
         toggleCustomSelect();
-        selectInput.value = item.innerHTML;
+        selectInput.value = '';
+        selectInput.placeholder = item.innerHTML;
+        item.classList.add('custom-select__option--active');
         select.value = item.innerHTML;
         state.activOption = index;
       });
+    });
+
+    function toggleCustomSelect() {
+      selectList.classList.toggle('custom-select__hidden');
+      state.status =
+        state.status === 'closed' || state.status === 'initial'
+          ? 'expanded'
+          : 'closed';
+    }
+
+    function showCurrentSelectValue() {
+      if (selectInput.value !== select.value) {
+        selectInput.value = select.value;
+      }
+    }
+
+    selectInput.addEventListener('click', function() {
+      if (state.status === 'closed' && state.countClicks === 0) {
+        selectInput.focus();
+        state.countClicks = 1;
+        if (state.options.length > state.renderedOptions.length) {
+          selectList.innerHTML = '';
+          state.options.forEach(function(item) {
+            selectList.appendChild(item);
+          });
+        }
+      }
+      showCurrentSelectValue();
+      state.countClicks = 0;
+      toggleCustomSelect();
     });
 
     function selectNext() {
@@ -135,7 +167,8 @@ var customicSelect = (function() {
         case 'Enter':
           if (state.status === 'expanded') {
             if (state.activOption !== 'default') {
-              selectInput.value = selectOptions[state.activOption].innerHTML;
+              selectInput.placeholder =
+                selectOptions[state.activOption].innerHTML;
               select.value = selectOptions[state.activOption].innerHTML;
             }
             toggleCustomSelect();
@@ -181,11 +214,14 @@ var customicSelect = (function() {
     function closeAndRemoveKeyListener(e) {
       var target = e.target;
       if (target !== customSelect && !customSelect.contains(target)) {
+        console.log('!!');
         if (state.status === 'expanded') {
+          console.log('!!!');
           toggleCustomSelect();
         }
         document.removeEventListener('keyup', keyActions);
       }
+      showCurrentSelectValue();
     }
 
     customSelect.addEventListener('focusin', function() {
@@ -194,6 +230,24 @@ var customicSelect = (function() {
 
     document.addEventListener('click', function(e) {
       closeAndRemoveKeyListener(e);
+    });
+    //Search functionality
+    selectInput.addEventListener('input', function(e) {
+      state.inputValue = selectInput.value;
+
+      state.renderedOptions = state.options.filter(function(item) {
+        console.log('filter');
+        return item.innerHTML
+          .toLowerCase()
+          .includes(state.inputValue.toLowerCase());
+      });
+
+      if (state.renderedOptions.length > 0) {
+        selectList.innerHTML = '';
+        state.renderedOptions.forEach(function(item) {
+          selectList.appendChild(item);
+        });
+      }
     });
   });
 })();
