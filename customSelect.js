@@ -79,7 +79,6 @@ var customicSelect = (function() {
     );
     customSelect.insertBefore(selectInput, selectList);
 
-    //function click
     function clickAndEnterChooseHandler(option) {
       var currentLiOption = state.renderedOptions[option.dataset.count];
       if (
@@ -95,21 +94,7 @@ var customicSelect = (function() {
       state.activeItem = currentLiOption;
       select.value = currentLiOption.innerHTML;
       state.activOption = +currentLiOption.dataset.count;
-      console.log(currentLiOption);
     }
-
-    selectList.addEventListener('click', function(e) {
-      var currentOption = e.target;
-      if (currentOption.tagName === 'LI') {
-        clickAndEnterChooseHandler(currentOption);
-        toggleCustomSelect();
-      }
-    });
-
-    selectOptions.forEach(function(item, index) {
-      state.options.push(item);
-      state.renderedOptions.push(item);
-    });
 
     function toggleCustomSelect() {
       selectList.classList.toggle('custom-select__hidden');
@@ -148,35 +133,42 @@ var customicSelect = (function() {
       toggleCustomSelect();
     }
 
-    selectInput.addEventListener('click', function() {
-      clickAndEnterHandler();
-    });
+    function focusItemAndResetActiveOption(activOption) {
+      state.activOption = activOption;
+      state.renderedOptions[state.activOption].focus();
+    }
 
     function selectNext() {
       if (state.activOption !== 'default') {
         if (state.activOption === state.renderedOptions.length - 1) {
-          state.activOption = 0;
-          state.renderedOptions[state.activOption].focus();
+          focusItemAndResetActiveOption(0);
         } else state.activOption += 1;
-        console.log(state.renderedOptions);
         state.renderedOptions[state.activOption].focus();
       } else {
-        state.activOption = 0;
-        state.renderedOptions[state.activOption].focus();
+        focusItemAndResetActiveOption(0);
       }
     }
 
     function selectPrevious() {
       if (state.activOption !== 'default') {
         if (state.activOption === 0) {
-          state.activOption = state.renderedOptions.length - 1;
-          state.renderedOptions[state.activOption].focus();
+          focusItemAndResetActiveOption(state.renderedOptions.length - 1);
         } else state.activOption -= 1;
         state.renderedOptions[state.activOption].focus();
       } else {
-        state.activOption = 0;
-        state.renderedOptions[state.activOption].focus();
+        focusItemAndResetActiveOption(0);
       }
+    }
+
+    function handlerAndClose(handler) {
+      toggleCustomSelect();
+      handler();
+      break;
+    }
+
+    function handler(handler) {
+      handler();
+      break;
     }
 
     function keyActions(event) {
@@ -202,45 +194,31 @@ var customicSelect = (function() {
           break;
         case 'ArrowDown':
           if (state.status === 'expanded') {
-            selectNext();
-            break;
+            handler(selectNext);
           }
-          toggleCustomSelect();
-          selectNext();
-          break;
+          handlerAndClose(selectNext);
         case 'ArrowRight':
           if (state.status === 'expanded') {
-            selectNext();
-            break;
+            handler(selectNext);
           }
-          toggleCustomSelect();
-          selectNext();
-          break;
+          handlerAndClose(selectNext);
         case 'ArrowUp':
           if (state.status === 'expanded') {
-            selectPrevious();
-            break;
+            handler(selectPrevious);
           }
-          toggleCustomSelect();
-          selectPrevious();
-          break;
+          handlerAndClose(selectPrevious);
         case 'ArrowLeft':
           if (state.status === 'expanded') {
-            selectPrevious();
-            break;
+            handler(selectPrevious);
           }
-          toggleCustomSelect();
-          selectPrevious();
-          break;
+          handlerAndClose(selectPrevious);
       }
     }
 
     function closeAndRemoveKeyListener(e) {
       var target = e.target;
       if (target !== customSelect && !customSelect.contains(target)) {
-        console.log('!!');
         if (state.status === 'expanded') {
-          console.log('!!!');
           toggleCustomSelect();
         }
         document.removeEventListener('keyup', keyActions);
@@ -253,6 +231,23 @@ var customicSelect = (function() {
       document.addEventListener('keyup', keyActions);
     });
 
+    selectList.addEventListener('click', function(e) {
+      var currentOption = e.target;
+      if (currentOption.tagName === 'LI') {
+        clickAndEnterChooseHandler(currentOption);
+        toggleCustomSelect();
+      }
+    });
+
+    selectOptions.forEach(function(item, index) {
+      state.options.push(item);
+      state.renderedOptions.push(item);
+    });
+
+    selectInput.addEventListener('click', function() {
+      clickAndEnterHandler();
+    });
+
     document.addEventListener('click', function(e) {
       closeAndRemoveKeyListener(e);
     });
@@ -261,7 +256,6 @@ var customicSelect = (function() {
       state.inputValue = selectInput.value;
 
       state.renderedOptions = state.options.filter(function(item) {
-        console.log('filter');
         return item.innerHTML
           .toLowerCase()
           .includes(state.inputValue.toLowerCase());
@@ -274,7 +268,6 @@ var customicSelect = (function() {
           selectList.appendChild(item);
         });
         state.activOption = 0;
-        //state.renderedOptions[state.activOption].focus();
       }
       if (state.renderedOptions.length === 0) {
         selectList.innerHTML = '';
