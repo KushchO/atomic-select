@@ -27,18 +27,19 @@ var customicSelect = (function() {
         select.parentElement.appendChild(createInput(option));
         select.value = option.text;
       } else {
-        selectList.appendChild(creatSelectOption(option));
+        selectList.appendChild(creatSelectOption(option, index));
       }
     });
     return selectList;
   }
 
-  function creatSelectOption(optionItem) {
+  function creatSelectOption(optionItem, index) {
     var selectOption = document.createElement('li');
     selectOption.classList.add('custom-select__option');
     selectOption.dataset.value = optionItem.value;
     selectOption.dataset.selected = optionItem.selected;
     selectOption.dataset.disabled = optionItem.disabled;
+    selectOption.dataset.count = index - 1;
     selectOption.setAttribute('tabindex', '-1');
     selectOption.textContent = optionItem.text;
     return selectOption;
@@ -58,8 +59,9 @@ var customicSelect = (function() {
 
   customSelects.forEach(function(select) {
     var state = {
-      status: 'initial',
+      status: 'closed',
       activOption: 'default',
+      activeItem: '',
       countClicks: 0,
       inputValue: '',
       options: [],
@@ -75,33 +77,43 @@ var customicSelect = (function() {
     var selectOptions = selectWrapper.querySelectorAll(
       '.custom-select__option'
     );
-    var optionsNumber = selectOptions.length;
     customSelect.insertBefore(selectInput, selectList);
+
+    //function click
+    function clickAndEnterChooseHandler(option) {
+      var currentLiOption = state.renderedOptions[option.dataset.count];
+      if (
+        state.activOption !== 'default' &&
+        currentLiOption.innerHTML !== select.value &&
+        state.activeItem
+      ) {
+        state.activeItem.classList.remove('custom-select__option--active');
+      }
+      selectInput.value = '';
+      selectInput.placeholder = currentLiOption.innerHTML;
+      currentLiOption.classList.add('custom-select__option--active');
+      state.activeItem = currentLiOption;
+      select.value = currentLiOption.innerHTML;
+      state.activOption = +currentLiOption.dataset.count;
+      console.log(currentLiOption);
+    }
+
+    selectList.addEventListener('click', function(e) {
+      var currentOption = e.target;
+      if (currentOption.tagName === 'LI') {
+        clickAndEnterChooseHandler(currentOption);
+        toggleCustomSelect();
+      }
+    });
 
     selectOptions.forEach(function(item, index) {
       state.options.push(item);
       state.renderedOptions.push(item);
-      item.addEventListener('click', function() {
-        selectOptions.forEach(function(item) {
-          if (item.classList.contains('custom-select__option--active')) {
-            item.classList.remove('custom-select__option--active');
-          }
-        });
-        toggleCustomSelect();
-        selectInput.value = '';
-        selectInput.placeholder = item.innerHTML;
-        item.classList.add('custom-select__option--active');
-        select.value = item.innerHTML;
-        state.activOption = index;
-      });
     });
 
     function toggleCustomSelect() {
       selectList.classList.toggle('custom-select__hidden');
-      state.status =
-        state.status === 'closed' || state.status === 'initial'
-          ? 'expanded'
-          : 'closed';
+      state.status = state.status === 'closed' ? 'expanded' : 'closed';
     }
 
     function showCurrentSelectValue() {
@@ -110,45 +122,60 @@ var customicSelect = (function() {
       }
     }
 
-    selectInput.addEventListener('click', function() {
+    function renderAll() {
+      selectList.innerHTML = '';
+      state.renderedOptions = [];
+      state.options.forEach(function(item, index) {
+        item.dataset.count = index;
+        state.renderedOptions.push(item);
+        selectList.appendChild(item);
+        if (state.activeItem) {
+          state.activOption = state.activeItem.dataset.count;
+        }
+      });
+    }
+
+    function clickAndEnterHandler() {
       if (state.status === 'closed' && state.countClicks === 0) {
         selectInput.focus();
         state.countClicks = 1;
         if (state.options.length > state.renderedOptions.length) {
-          selectList.innerHTML = '';
-          state.options.forEach(function(item) {
-            selectList.appendChild(item);
-          });
+          renderAll();
         }
       }
       showCurrentSelectValue();
       state.countClicks = 0;
       toggleCustomSelect();
+    }
+
+    selectInput.addEventListener('click', function() {
+      clickAndEnterHandler();
     });
 
     function selectNext() {
       if (state.activOption !== 'default') {
-        if (state.activOption === optionsNumber - 1) {
+        if (state.activOption === state.renderedOptions.length - 1) {
           state.activOption = 0;
-          selectOptions[state.activOption].focus();
+          state.renderedOptions[state.activOption].focus();
         } else state.activOption += 1;
-        selectOptions[state.activOption].focus();
+        console.log(state.renderedOptions);
+        state.renderedOptions[state.activOption].focus();
       } else {
         state.activOption = 0;
-        selectOptions[state.activOption].focus();
+        state.renderedOptions[state.activOption].focus();
       }
     }
 
     function selectPrevious() {
       if (state.activOption !== 'default') {
         if (state.activOption === 0) {
-          state.activOption = optionsNumber - 1;
-          selectOptions[state.activOption].focus();
+          state.activOption = state.renderedOptions.length - 1;
+          state.renderedOptions[state.activOption].focus();
         } else state.activOption -= 1;
-        selectOptions[state.activOption].focus();
+        state.renderedOptions[state.activOption].focus();
       } else {
         state.activOption = 0;
-        selectOptions[state.activOption].focus();
+        state.renderedOptions[state.activOption].focus();
       }
     }
 
@@ -165,16 +192,13 @@ var customicSelect = (function() {
           closeAndRemoveKeyListener(event);
           break;
         case 'Enter':
-          if (state.status === 'expanded') {
-            if (state.activOption !== 'default') {
-              selectInput.placeholder =
-                selectOptions[state.activOption].innerHTML;
-              select.value = selectOptions[state.activOption].innerHTML;
-            }
-            toggleCustomSelect();
-            break;
+          if (
+            state.status !== 'closed' &&
+            document.activeElement.tagName === 'LI'
+          ) {
+            clickAndEnterChooseHandler(document.activeElement);
           }
-          toggleCustomSelect();
+          clickAndEnterHandler();
           break;
         case 'ArrowDown':
           if (state.status === 'expanded') {
@@ -224,7 +248,8 @@ var customicSelect = (function() {
       showCurrentSelectValue();
     }
 
-    customSelect.addEventListener('focusin', function() {
+    customSelect.addEventListener('focusin', function(e) {
+      e.stopPropagation();
       document.addEventListener('keyup', keyActions);
     });
 
@@ -244,9 +269,20 @@ var customicSelect = (function() {
 
       if (state.renderedOptions.length > 0) {
         selectList.innerHTML = '';
-        state.renderedOptions.forEach(function(item) {
+        state.renderedOptions.forEach(function(item, index) {
+          item.dataset.count = index;
           selectList.appendChild(item);
         });
+        state.activOption = 0;
+        //state.renderedOptions[state.activOption].focus();
+      }
+      if (state.renderedOptions.length === 0) {
+        selectList.innerHTML = '';
+        state.activOption = 0;
+      }
+      if (selectInput.value === '') {
+        renderAll();
+        state.activOption = 0;
       }
     });
   });
