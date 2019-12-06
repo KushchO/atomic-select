@@ -65,7 +65,8 @@ var customicSelect = (function() {
       countClicks: 0,
       inputValue: '',
       options: [],
-      renderedOptions: []
+      renderedOptions: [],
+      notFound: '<li class="custom-select__option">Ничего не найдено</li>'
     };
     select.parentElement.appendChild(createListWrapper(select));
     hideOriginalSelect(select);
@@ -87,10 +88,12 @@ var customicSelect = (function() {
         state.activeItem
       ) {
         state.activeItem.classList.remove('custom-select__option--active');
+        state.activeItem.dataset.selected = 'false';
       }
       selectInput.value = '';
       selectInput.placeholder = currentLiOption.innerHTML;
       currentLiOption.classList.add('custom-select__option--active');
+      currentLiOption.dataset.selected = true;
       state.activeItem = currentLiOption;
       select.value = currentLiOption.innerHTML;
       state.activOption = +currentLiOption.dataset.count;
@@ -194,24 +197,36 @@ var customicSelect = (function() {
           break;
         case 'ArrowDown':
           if (state.status === 'expanded') {
-            handler(selectNext);
+            selectNext();
+            break;
           }
-          handlerAndClose(selectNext);
+          toggleCustomSelect();
+          selectNext();
+          break;
         case 'ArrowRight':
           if (state.status === 'expanded') {
-            handler(selectNext);
+            selectNext();
+            break;
           }
-          handlerAndClose(selectNext);
+          toggleCustomSelect();
+          selectNext();
+          break;
         case 'ArrowUp':
           if (state.status === 'expanded') {
-            handler(selectPrevious);
+            selectPrevious();
+            break;
           }
-          handlerAndClose(selectPrevious);
+          toggleCustomSelect();
+          selectPrevious();
+          break;
         case 'ArrowLeft':
           if (state.status === 'expanded') {
-            handler(selectPrevious);
+            selectPrevious();
+            break;
           }
-          handlerAndClose(selectPrevious);
+          toggleCustomSelect();
+          selectPrevious();
+          break;
       }
     }
 
@@ -270,7 +285,7 @@ var customicSelect = (function() {
         state.activOption = 0;
       }
       if (state.renderedOptions.length === 0) {
-        selectList.innerHTML = '';
+        selectList.innerHTML = state.notFound;
         state.activOption = 0;
       }
       if (selectInput.value === '') {
