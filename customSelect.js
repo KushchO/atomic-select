@@ -1,6 +1,13 @@
-var customicSelect = (function() {
-  var customSelects = document.querySelectorAll('.customic-select');
-
+var customicSelect = function(className) {
+  if (window.NodeList && !NodeList.prototype.forEach) {
+    NodeList.prototype.forEach = function(callback, thisArg) {
+      thisArg = thisArg || window;
+      for (var i = 0; i < this.length; i++) {
+        callback.call(thisArg, this[i], i, this);
+      }
+    };
+  }
+  var customSelects = document.querySelectorAll(className);
   if (customSelects.length === 0) {
     return;
   }
@@ -50,9 +57,9 @@ var customicSelect = (function() {
     var listWrapper = document.createElement('div');
     listWrapper.classList.add('custom-select__wrapper');
     listWrapper.setAttribute('tabindex', '-1');
-    selectСlassList.forEach(function(className) {
-      listWrapper.classList.add(className);
-    });
+    for (var i = 0; i < selectСlassList.length; i++) {
+      listWrapper.classList.add(selectСlassList[i]);
+    }
     listWrapper.appendChild(createSelectList(select));
     return listWrapper;
   }
@@ -79,6 +86,11 @@ var customicSelect = (function() {
       '.custom-select__option'
     );
     customSelect.insertBefore(selectInput, selectList);
+
+    selectOptions.forEach(function(item) {
+      state.options.push(item);
+      state.renderedOptions.push(item);
+    });
 
     function clickAndEnterChooseHandler(option) {
       var currentLiOption = state.renderedOptions[option.dataset.count];
@@ -163,30 +175,19 @@ var customicSelect = (function() {
       }
     }
 
-    function handlerAndClose(handler) {
-      toggleCustomSelect();
-      handler();
-      break;
-    }
-
-    function handler(handler) {
-      handler();
-      break;
-    }
-
     function keyActions(event) {
-      var key = event.code;
+      var key = event.keyCode;
       switch (key) {
-        case 'Escape':
+        case 27:
           if (state.status === 'expanded') {
             selectInput.focus();
             toggleCustomSelect();
           }
           break;
-        case 'Tab':
+        case 9:
           closeAndRemoveKeyListener(event);
           break;
-        case 'Enter':
+        case 13:
           if (
             state.status !== 'closed' &&
             document.activeElement.tagName === 'LI'
@@ -195,7 +196,7 @@ var customicSelect = (function() {
           }
           clickAndEnterHandler();
           break;
-        case 'ArrowDown':
+        case 40:
           if (state.status === 'expanded') {
             selectNext();
             break;
@@ -203,7 +204,7 @@ var customicSelect = (function() {
           toggleCustomSelect();
           selectNext();
           break;
-        case 'ArrowRight':
+        case 39:
           if (state.status === 'expanded') {
             selectNext();
             break;
@@ -211,7 +212,7 @@ var customicSelect = (function() {
           toggleCustomSelect();
           selectNext();
           break;
-        case 'ArrowUp':
+        case 38:
           if (state.status === 'expanded') {
             selectPrevious();
             break;
@@ -219,7 +220,7 @@ var customicSelect = (function() {
           toggleCustomSelect();
           selectPrevious();
           break;
-        case 'ArrowLeft':
+        case 37:
           if (state.status === 'expanded') {
             selectPrevious();
             break;
@@ -254,11 +255,6 @@ var customicSelect = (function() {
       }
     });
 
-    selectOptions.forEach(function(item, index) {
-      state.options.push(item);
-      state.renderedOptions.push(item);
-    });
-
     selectInput.addEventListener('click', function() {
       clickAndEnterHandler();
     });
@@ -266,16 +262,24 @@ var customicSelect = (function() {
     document.addEventListener('click', function(e) {
       closeAndRemoveKeyListener(e);
     });
+
     //Search functionality
     selectInput.addEventListener('input', function(e) {
       state.inputValue = selectInput.value;
-
-      state.renderedOptions = state.options.filter(function(item) {
-        return item.innerHTML
-          .toLowerCase()
-          .includes(state.inputValue.toLowerCase());
-      });
-
+      state.renderedOptions = [];
+      if (state.inputValue) {
+        state.options.forEach(function(item) {
+          if (
+            item.innerHTML
+              .toLowerCase()
+              .indexOf(state.inputValue.toLowerCase()) !== -1
+          ) {
+            state.renderedOptions.push(item);
+          } else {
+            return;
+          }
+        });
+      }
       if (state.renderedOptions.length > 0) {
         selectList.innerHTML = '';
         state.renderedOptions.forEach(function(item, index) {
@@ -294,4 +298,6 @@ var customicSelect = (function() {
       }
     });
   });
-})();
+};
+
+customicSelect('.customic-select');
