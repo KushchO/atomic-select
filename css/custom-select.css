@@ -57,3 +57,10 @@
 .custom-select__option:hover {
   background-color: #e3e3e3;
 }
+
+.custom-select__option--disabled,
+.custom-select__option--disabled:hover,
+.custom-select__option:focus {
+  background-color: #333333;
+  color: #ffffff;
+}

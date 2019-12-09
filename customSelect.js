@@ -18,6 +18,7 @@ var customicSelect = function(className) {
 
   function createInput(option) {
     var selectInput = document.createElement('input');
+    selectInput.tabIndex = -1;
     selectInput.classList.add('custom-select__input');
     selectInput.placeholder = option.text;
     selectInput.setAttribute('aria-label', option.text);
@@ -30,12 +31,11 @@ var customicSelect = function(className) {
     selectList.classList.add('custom-select__list');
     selectList.classList.add('custom-select__hidden');
     selectOptions.forEach(function(option, index) {
-      if (index === 0) {
+      if (option.selected === true) {
         select.parentElement.appendChild(createInput(option));
-        select.value = option.text;
-      } else {
-        selectList.appendChild(creatSelectOption(option, index));
+        select.value = option.dataset.value;
       }
+      selectList.appendChild(creatSelectOption(option, index));
     });
     return selectList;
   }
@@ -43,10 +43,13 @@ var customicSelect = function(className) {
   function creatSelectOption(optionItem, index) {
     var selectOption = document.createElement('li');
     selectOption.classList.add('custom-select__option');
+    if (optionItem.disabled === true) {
+      selectOption.classList.add('custom-select__option--disabled');
+    }
     selectOption.dataset.value = optionItem.value;
     selectOption.dataset.selected = optionItem.selected;
     selectOption.dataset.disabled = optionItem.disabled;
-    selectOption.dataset.count = index - 1;
+    selectOption.dataset.count = index;
     selectOption.setAttribute('tabindex', '-1');
     selectOption.textContent = optionItem.text;
     return selectOption;
@@ -65,6 +68,10 @@ var customicSelect = function(className) {
   }
 
   customSelects.forEach(function(select) {
+    var notFound = document.createElement('li');
+    notFound.classList.add('custom-select__option');
+    notFound.classList.add('custom-select__option--not-found');
+    notFound.textContent = 'Ничего не найдено';
     var state = {
       status: 'closed',
       activOption: 'default',
@@ -73,7 +80,7 @@ var customicSelect = function(className) {
       inputValue: '',
       options: [],
       renderedOptions: [],
-      notFound: '<li class="custom-select__option">Ничего не найдено</li>'
+      notFound: notFound
     };
     select.parentElement.appendChild(createListWrapper(select));
     hideOriginalSelect(select);
@@ -93,22 +100,24 @@ var customicSelect = function(className) {
     });
 
     function clickAndEnterChooseHandler(option) {
-      var currentLiOption = state.renderedOptions[option.dataset.count];
-      if (
-        state.activOption !== 'default' &&
-        currentLiOption.textContent !== select.value &&
-        state.activeItem
-      ) {
-        state.activeItem.classList.remove('custom-select__option--active');
-        state.activeItem.dataset.selected = 'false';
+      if (option.dataset.disabled !== 'true') {
+        var currentLiOption = state.renderedOptions[option.dataset.count];
+        if (
+          state.activOption !== 'default' &&
+          currentLiOption.textContent !== select.value &&
+          state.activeItem
+        ) {
+          state.activeItem.classList.remove('custom-select__option--active');
+          state.activeItem.dataset.selected = 'false';
+        }
+        selectInput.value = '';
+        selectInput.placeholder = currentLiOption.textContent;
+        currentLiOption.classList.add('custom-select__option--active');
+        currentLiOption.dataset.selected = true;
+        state.activeItem = currentLiOption;
+        select.value = currentLiOption.dataset.value;
+        state.activOption = +currentLiOption.dataset.count;
       }
-      selectInput.value = '';
-      selectInput.placeholder = currentLiOption.textContent.;
-      currentLiOption.classList.add('custom-select__option--active');
-      currentLiOption.dataset.selected = true;
-      state.activeItem = currentLiOption;
-      select.value = currentLiOption.dataset.value;
-      state.activOption = +currentLiOption.dataset.count;
     }
 
     function toggleCustomSelect() {
@@ -136,8 +145,8 @@ var customicSelect = function(className) {
     }
 
     function clickAndEnterHandler() {
+      selectInput.focus();
       if (state.status === 'closed' && state.countClicks === 0) {
-        selectInput.focus();
         state.countClicks = 1;
         if (state.options.length > state.renderedOptions.length) {
           renderAll();
@@ -175,8 +184,9 @@ var customicSelect = function(className) {
       }
     }
 
-    function keyActions(event) {
-      var key = event.keyCode;
+    function keyActions(e) {
+      e.preventDefault();
+      var key = e.keyCode;
       switch (key) {
         case 27:
           if (state.status === 'expanded') {
@@ -185,7 +195,7 @@ var customicSelect = function(className) {
           }
           break;
         case 9:
-          closeAndRemoveKeyListener(event);
+          closeAndRemoveKeyListener();
           break;
         case 13:
           if (
@@ -249,14 +259,17 @@ var customicSelect = function(className) {
 
     selectList.addEventListener('click', function(e) {
       var currentOption = e.target;
-      if (currentOption.tagName === 'LI') {
+      if (
+        currentOption.tagName === 'LI' &&
+        currentOption.dataset.disabled !== 'true'
+      ) {
         clickAndEnterChooseHandler(currentOption);
         toggleCustomSelect();
       }
     });
 
-    selectInput.addEventListener('click', function() {
-      clickAndEnterHandler();
+    selectInput.addEventListener('click', function(e) {
+      clickAndEnterHandler(e);
     });
 
     document.addEventListener('click', function(e) {
@@ -265,6 +278,7 @@ var customicSelect = function(className) {
 
     //Search functionality
     selectInput.addEventListener('input', function(e) {
+      e.preventDefault();
       state.inputValue = selectInput.value;
       state.renderedOptions = [];
       if (state.inputValue) {
@@ -289,7 +303,8 @@ var customicSelect = function(className) {
         state.activOption = 0;
       }
       if (state.renderedOptions.length === 0) {
-        selectList.textContent = state.notFound;
+        selectList.textContent = '';
+        selectList.appendChild(state.notFound);
         state.activOption = 0;
       }
       if (selectInput.value === '') {
