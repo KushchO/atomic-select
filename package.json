@@ -1,0 +1,23 @@
+{
+  "name": "atomic-select",
+  "version": "1.0.0",
+  "description": "\"Custom lightweight no dependencies select library with search feature\"",
+  "main": "customSelect.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KushchO/atomic-select.git"
+  },
+  "keywords": [
+    "custom",
+    "select"
+  ],
+  "author": "Kushch Oleg",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KushchO/atomic-select/issues"
+  },
+  "homepage": "https://github.com/KushchO/atomic-select#readme"
+}

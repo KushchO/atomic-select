@@ -96,18 +96,18 @@ var customicSelect = function(className) {
       var currentLiOption = state.renderedOptions[option.dataset.count];
       if (
         state.activOption !== 'default' &&
-        currentLiOption.innerHTML !== select.value &&
+        currentLiOption.textContent !== select.value &&
         state.activeItem
       ) {
         state.activeItem.classList.remove('custom-select__option--active');
         state.activeItem.dataset.selected = 'false';
       }
       selectInput.value = '';
-      selectInput.placeholder = currentLiOption.innerHTML;
+      selectInput.placeholder = currentLiOption.textContent.;
       currentLiOption.classList.add('custom-select__option--active');
       currentLiOption.dataset.selected = true;
       state.activeItem = currentLiOption;
-      select.value = currentLiOption.innerHTML;
+      select.value = currentLiOption.dataset.value;
       state.activOption = +currentLiOption.dataset.count;
     }
 
@@ -123,7 +123,7 @@ var customicSelect = function(className) {
     }
 
     function renderAll() {
-      selectList.innerHTML = '';
+      selectList.textContent = '';
       state.renderedOptions = [];
       state.options.forEach(function(item, index) {
         item.dataset.count = index;
@@ -270,7 +270,7 @@ var customicSelect = function(className) {
       if (state.inputValue) {
         state.options.forEach(function(item) {
           if (
-            item.innerHTML
+            item.textContent
               .toLowerCase()
               .indexOf(state.inputValue.toLowerCase()) !== -1
           ) {
@@ -281,7 +281,7 @@ var customicSelect = function(className) {
         });
       }
       if (state.renderedOptions.length > 0) {
-        selectList.innerHTML = '';
+        selectList.textContent = '';
         state.renderedOptions.forEach(function(item, index) {
           item.dataset.count = index;
           selectList.appendChild(item);
@@ -289,7 +289,7 @@ var customicSelect = function(className) {
         state.activOption = 0;
       }
       if (state.renderedOptions.length === 0) {
-        selectList.innerHTML = state.notFound;
+        selectList.textContent = state.notFound;
         state.activOption = 0;
       }
       if (selectInput.value === '') {
