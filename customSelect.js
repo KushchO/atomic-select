@@ -144,7 +144,8 @@ var customicSelect = function(className) {
       });
     }
 
-    function clickAndEnterHandler() {
+    function clickAndEnterHandler(e) {
+      e.stopImmediatePropagation();
       selectInput.focus();
       if (state.status === 'closed' && state.countClicks === 0) {
         state.countClicks = 1;
@@ -185,6 +186,7 @@ var customicSelect = function(className) {
     }
 
     function keyActions(e) {
+      e.stopPropagation();
       e.preventDefault();
       var key = e.keyCode;
       switch (key) {
@@ -195,7 +197,7 @@ var customicSelect = function(className) {
           }
           break;
         case 9:
-          closeAndRemoveKeyListener();
+          closeAndRemoveKeyListener(e);
           break;
         case 13:
           if (
@@ -204,7 +206,7 @@ var customicSelect = function(className) {
           ) {
             clickAndEnterChooseHandler(document.activeElement);
           }
-          clickAndEnterHandler();
+          clickAndEnterHandler(e);
           break;
         case 40:
           if (state.status === 'expanded') {
@@ -253,7 +255,6 @@ var customicSelect = function(className) {
     }
 
     customSelect.addEventListener('focusin', function(e) {
-      e.stopPropagation();
       document.addEventListener('keyup', keyActions);
     });
 
