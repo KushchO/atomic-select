@@ -139,13 +139,12 @@ var customicSelect = function(className) {
         state.renderedOptions.push(item);
         selectList.appendChild(item);
         if (state.activeItem) {
-          state.activOption = state.activeItem.dataset.count;
+          state.activOption = +state.activeItem.dataset.count;
         }
       });
     }
 
-    function clickAndEnterHandler(e) {
-      e.stopImmediatePropagation();
+    function clickAndEnterHandler() {
       selectInput.focus();
       if (state.status === 'closed' && state.countClicks === 0) {
         state.countClicks = 1;
@@ -159,7 +158,7 @@ var customicSelect = function(className) {
     }
 
     function focusItemAndResetActiveOption(activOption) {
-      state.activOption = activOption;
+      state.activOption = +activOption;
       state.renderedOptions[state.activOption].focus();
     }
 
@@ -186,8 +185,6 @@ var customicSelect = function(className) {
     }
 
     function keyActions(e) {
-      e.stopPropagation();
-      e.preventDefault();
       var key = e.keyCode;
       switch (key) {
         case 27:
@@ -200,13 +197,14 @@ var customicSelect = function(className) {
           closeAndRemoveKeyListener(e);
           break;
         case 13:
+          e.preventDefault();
           if (
             state.status !== 'closed' &&
             document.activeElement.tagName === 'LI'
           ) {
             clickAndEnterChooseHandler(document.activeElement);
           }
-          clickAndEnterHandler(e);
+          clickAndEnterHandler();
           break;
         case 40:
           if (state.status === 'expanded') {
@@ -249,13 +247,13 @@ var customicSelect = function(className) {
         if (state.status === 'expanded') {
           toggleCustomSelect();
         }
-        document.removeEventListener('keyup', keyActions);
+        document.removeEventListener('keydown', keyActions);
       }
       showCurrentSelectValue();
     }
 
     customSelect.addEventListener('focusin', function(e) {
-      document.addEventListener('keyup', keyActions);
+      document.addEventListener('keydown', keyActions);
     });
 
     selectList.addEventListener('click', function(e) {
@@ -269,8 +267,8 @@ var customicSelect = function(className) {
       }
     });
 
-    selectInput.addEventListener('click', function(e) {
-      clickAndEnterHandler(e);
+    selectInput.addEventListener('click', function() {
+      clickAndEnterHandler();
     });
 
     document.addEventListener('click', function(e) {
@@ -278,8 +276,7 @@ var customicSelect = function(className) {
     });
 
     //Search functionality
-    selectInput.addEventListener('input', function(e) {
-      e.preventDefault();
+    selectInput.addEventListener('input', function() {
       state.inputValue = selectInput.value;
       state.renderedOptions = [];
       if (state.inputValue) {
@@ -315,5 +312,3 @@ var customicSelect = function(className) {
     });
   });
 };
-
-customicSelect('.customic-select');

@@ -1,0 +1,1 @@
+customicSelect('.customic-select');
