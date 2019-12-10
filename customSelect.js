@@ -22,6 +22,7 @@ var customicSelect = function(className) {
     selectInput.classList.add('custom-select__input');
     selectInput.placeholder = option.text;
     selectInput.setAttribute('aria-label', option.text);
+    selectInput.setAttribute('type', 'search');
     return selectInput;
   }
 
@@ -30,10 +31,10 @@ var customicSelect = function(className) {
     var selectOptions = select.querySelectorAll('option');
     selectList.classList.add('custom-select__list');
     selectList.classList.add('custom-select__hidden');
+    selectList.setAttribute('role', 'listbox');
     selectOptions.forEach(function(option, index) {
       if (option.selected === true) {
         select.parentElement.appendChild(createInput(option));
-        select.value = option.dataset.value;
       }
       selectList.appendChild(creatSelectOption(option, index));
     });
@@ -46,8 +47,10 @@ var customicSelect = function(className) {
     if (optionItem.disabled === true) {
       selectOption.classList.add('custom-select__option--disabled');
     }
+    if (optionItem.selected === true) {
+      selectOption.setAttribute('aria-selected', true);
+    }
     selectOption.dataset.value = optionItem.value;
-    selectOption.dataset.selected = optionItem.selected;
     selectOption.dataset.disabled = optionItem.disabled;
     selectOption.dataset.count = index;
     selectOption.setAttribute('tabindex', '-1');
@@ -60,6 +63,10 @@ var customicSelect = function(className) {
     var listWrapper = document.createElement('div');
     listWrapper.classList.add('custom-select__wrapper');
     listWrapper.setAttribute('tabindex', '-1');
+    listWrapper.setAttribute('role', 'combobox');
+    listWrapper.setAttribute('aria-haspopup', 'listbox');
+    listWrapper.setAttribute('aria-owns', 'custom-select-list');
+    listWrapper.setAttribute('aria-expanded', 'false');
     for (var i = 0; i < selectСlassList.length; i++) {
       listWrapper.classList.add(selectСlassList[i]);
     }
@@ -67,7 +74,7 @@ var customicSelect = function(className) {
     return listWrapper;
   }
 
-  customSelects.forEach(function(select) {
+  customSelects.forEach(function(select, index) {
     var notFound = document.createElement('li');
     notFound.classList.add('custom-select__option');
     notFound.classList.add('custom-select__option--not-found');
@@ -79,8 +86,7 @@ var customicSelect = function(className) {
       countClicks: 0,
       inputValue: '',
       options: [],
-      renderedOptions: [],
-      notFound: notFound
+      renderedOptions: []
     };
     select.parentElement.appendChild(createListWrapper(select));
     hideOriginalSelect(select);
@@ -88,7 +94,9 @@ var customicSelect = function(className) {
     var customSelect = selectWrapper.querySelector('.custom-select__wrapper');
     customSelect.setAttribute('tabindex', '0');
     var selectList = selectWrapper.querySelector('.custom-select__list');
+    selectList.setAttribute('id', 'custom-select' + index);
     var selectInput = selectWrapper.querySelector('.custom-select__input');
+    selectInput.setAttribute('aria-controls', 'custom-select' + index);
     var selectOptions = selectWrapper.querySelectorAll(
       '.custom-select__option'
     );
@@ -108,12 +116,12 @@ var customicSelect = function(className) {
           state.activeItem
         ) {
           state.activeItem.classList.remove('custom-select__option--active');
-          state.activeItem.dataset.selected = 'false';
+          state.activeItem.setAttribute('aria-selected', false);
         }
         selectInput.value = '';
         selectInput.placeholder = currentLiOption.textContent;
         currentLiOption.classList.add('custom-select__option--active');
-        currentLiOption.dataset.selected = true;
+        currentLiOption.setAttribute('aria-selected', true);
         state.activeItem = currentLiOption;
         select.value = currentLiOption.dataset.value;
         state.activOption = +currentLiOption.dataset.count;
@@ -123,6 +131,11 @@ var customicSelect = function(className) {
     function toggleCustomSelect() {
       selectList.classList.toggle('custom-select__hidden');
       state.status = state.status === 'closed' ? 'expanded' : 'closed';
+      if (state.status === 'closed') {
+        customSelect.setAttribute('aria-expanded', 'false');
+      } else {
+        customSelect.setAttribute('aria-expanded', 'true');
+      }
     }
 
     function showCurrentSelectValue() {
@@ -302,7 +315,7 @@ var customicSelect = function(className) {
       }
       if (state.renderedOptions.length === 0) {
         selectList.textContent = '';
-        selectList.appendChild(state.notFound);
+        selectList.appendChild(notFound);
         state.activOption = 0;
       }
       if (selectInput.value === '') {
