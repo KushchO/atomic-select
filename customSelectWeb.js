@@ -26,7 +26,6 @@ var atomicSelect = function(className) {
     selectInput.classList.add('custom-select__input');
     selectInput.placeholder = option.text;
     selectInput.setAttribute('aria-label', option.text);
-    selectInput.setAttribute('type', 'search');
     return selectInput;
   }
   //Function which creates list for options and returns it
@@ -37,7 +36,6 @@ var atomicSelect = function(className) {
     var selectOptions = select.querySelectorAll('option');
     selectList.classList.add('custom-select__list');
     selectList.classList.add('custom-select__hidden');
-    selectList.setAttribute('role', 'listbox');
     selectOptions.forEach(function(option, index) {
       if (option.selected === true) {
         select.parentElement.appendChild(createInput(option));
@@ -54,10 +52,8 @@ var atomicSelect = function(className) {
     if (optionItem.disabled === true) {
       selectOption.classList.add('custom-select__option--disabled');
     }
-    if (optionItem.selected === true) {
-      selectOption.setAttribute('aria-selected', true);
-    }
     selectOption.dataset.value = optionItem.value;
+    selectOption.dataset.selected = optionItem.selected;
     selectOption.dataset.disabled = optionItem.disabled;
     selectOption.dataset.count = index;
     selectOption.setAttribute('tabindex', '-1');
@@ -71,10 +67,6 @@ var atomicSelect = function(className) {
     var listWrapper = document.createElement('div');
     listWrapper.classList.add('custom-select__wrapper');
     listWrapper.setAttribute('tabindex', '-1');
-    listWrapper.setAttribute('role', 'combobox');
-    listWrapper.setAttribute('aria-haspopup', 'listbox');
-    listWrapper.setAttribute('aria-owns', 'custom-select-list');
-    listWrapper.setAttribute('aria-expanded', 'false');
     for (var i = 0; i < selectСlassList.length; i++) {
       listWrapper.classList.add(selectСlassList[i]);
     }
@@ -96,7 +88,8 @@ var atomicSelect = function(className) {
       countClicks: 0,
       inputValue: '',
       options: [],
-      renderedOptions: []
+      renderedOptions: [],
+      notFound: notFound
     };
     //Assigne all elements for each instanse of custom select instances
     select.parentElement.appendChild(createListWrapper(select));
@@ -105,9 +98,7 @@ var atomicSelect = function(className) {
     var customSelect = selectWrapper.querySelector('.custom-select__wrapper');
     customSelect.setAttribute('tabindex', '0');
     var selectList = selectWrapper.querySelector('.custom-select__list');
-    selectList.setAttribute('id', 'custom-select' + index);
     var selectInput = selectWrapper.querySelector('.custom-select__input');
-    selectInput.setAttribute('aria-controls', 'custom-select' + index);
     var selectOptions = selectWrapper.querySelectorAll(
       '.custom-select__option'
     );
@@ -129,7 +120,7 @@ var atomicSelect = function(className) {
           state.activeItem
         ) {
           state.activeItem.classList.remove('custom-select__option--active');
-          state.activeItem.setAttribute('aria-selected', false);
+          state.activeItem.dataset.selected = 'false';
         }
         //Here we set active status to choosen item
         //And send new value to our original select
@@ -147,15 +138,13 @@ var atomicSelect = function(className) {
       selectList.classList.toggle('custom-select__hidden');
       state.status = state.status === 'closed' ? 'expanded' : 'closed';
       if (state.status === 'closed') {
-        customSelect.setAttribute('aria-expanded', 'false');
-      } else {
-        customSelect.setAttribute('aria-expanded', 'true');
+        customSelect.focus();
       }
     }
     //Show our cussrent select value
-    function showCurrentSelectValue() {
-      if (selectInput.value !== select.value) {
-        selectInput.value = select.value;
+    function showCurrentSelectPlaceholder() {
+      if (selectInput.placeholder !== select.value) {
+        selectInput.placeholder = select.value;
       }
     }
     //Render all items of our select
@@ -187,7 +176,7 @@ var atomicSelect = function(className) {
           renderAll();
         }
       }
-      showCurrentSelectValue();
+      showCurrentSelectPlaceholder();
       state.countClicks = 0;
       toggleCustomSelect();
     }
@@ -294,7 +283,7 @@ var atomicSelect = function(className) {
         }
         document.removeEventListener('keydown', keyActions);
       }
-      showCurrentSelectValue();
+      showCurrentSelectPlaceholder();
     }
     //All Click Focus and input Listeners
     customSelect.addEventListener('focusin', function(e) {
@@ -349,18 +338,18 @@ var atomicSelect = function(className) {
           item.dataset.count = index;
           selectList.appendChild(item);
         });
-        state.activOption = 0;
+        state.activOption = 'default';
       }
       //Show "Not found" item if state.renderedOptions.length === 0
       if (state.renderedOptions.length === 0) {
         selectList.textContent = '';
-        selectList.appendChild(notFound);
-        state.activOption = 0;
+        selectList.appendChild(state.notFound);
+        state.activOption = 'default';
       }
       //RenderAll if our input is empty
       if (selectInput.value === '') {
         renderAll();
-        state.activOption = 0;
+        state.activOption = 'default';
       }
     });
   });

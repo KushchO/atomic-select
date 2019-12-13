@@ -1,1 +1,1 @@
-customicSelect('.customic-select');
+atomicSelect('.customic-select');

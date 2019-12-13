@@ -49,18 +49,20 @@
   padding: 5px 10px;
 }
 
-.custom-select__option:focus,
+
 .custom-select__option--active {
-  background-color: #eeeeee;
+  background-color: #b1b1b1;
 }
 
+.custom-select__option:focus,
 .custom-select__option:hover {
-  background-color: #e3e3e3;
+  background-color: #333333;
+  color: #ffffff;
 }
 
 .custom-select__option--disabled,
-.custom-select__option--disabled:hover,
-.custom-select__option:focus {
-  background-color: #333333;
+.custom-select__option--disabled:hover {
+  background-color: #585858;
   color: #ffffff;
+
 }
