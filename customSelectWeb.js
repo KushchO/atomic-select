@@ -137,11 +137,14 @@ var atomicSelect = function(className) {
     function toggleCustomSelect() {
       selectList.classList.toggle('custom-select__hidden');
       state.status = state.status === 'closed' ? 'expanded' : 'closed';
+      if (state.status === 'closed') {
+        customSelect.focus();
+      }
     }
     //Show our cussrent select value
-    function showCurrentSelectValue() {
-      if (selectInput.value !== select.value) {
-        selectInput.value = select.value;
+    function showCurrentSelectPlaceholder() {
+      if (selectInput.placeholder !== select.value) {
+        selectInput.placeholder = select.value;
       }
     }
     //Render all items of our select
@@ -173,7 +176,7 @@ var atomicSelect = function(className) {
           renderAll();
         }
       }
-      showCurrentSelectValue();
+      showCurrentSelectPlaceholder();
       state.countClicks = 0;
       toggleCustomSelect();
     }
@@ -280,7 +283,7 @@ var atomicSelect = function(className) {
         }
         document.removeEventListener('keydown', keyActions);
       }
-      showCurrentSelectValue();
+      showCurrentSelectPlaceholder();
     }
     //All Click Focus and input Listeners
     customSelect.addEventListener('focusin', function(e) {
@@ -335,18 +338,18 @@ var atomicSelect = function(className) {
           item.dataset.count = index;
           selectList.appendChild(item);
         });
-        state.activOption = 0;
+        state.activOption = 'default';
       }
       //Show "Not found" item if state.renderedOptions.length === 0
       if (state.renderedOptions.length === 0) {
         selectList.textContent = '';
         selectList.appendChild(state.notFound);
-        state.activOption = 0;
+        state.activOption = 'default';
       }
       //RenderAll if our input is empty
       if (selectInput.value === '') {
         renderAll();
-        state.activOption = 0;
+        state.activOption = 'default';
       }
     });
   });
