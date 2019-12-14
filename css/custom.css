@@ -1,0 +1,7 @@
+.custom-select__form {
+  display: flex;
+}
+
+.toggle-disabled {
+  height: 28px;
+}

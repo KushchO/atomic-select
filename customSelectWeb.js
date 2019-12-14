@@ -31,14 +31,14 @@ var atomicSelect = function(className) {
   //Function which creates list for options and returns it
   //It takes original select as argument
   //We also initiate creating and appending input and options here
-  function createSelectList(select) {
+  function createSelectList(select, customSelect) {
     var selectList = document.createElement('ul');
     var selectOptions = select.querySelectorAll('option');
     selectList.classList.add('custom-select__list');
     selectList.classList.add('custom-select__hidden');
     selectOptions.forEach(function(option, index) {
       if (option.selected === true) {
-        select.parentElement.appendChild(createInput(option));
+        customSelect.appendChild(createInput(option));
       }
       selectList.appendChild(creatSelectOption(option, index));
     });
@@ -62,19 +62,19 @@ var atomicSelect = function(className) {
   }
   //Function creates custom select wrapper and returns it
   //initiates creating select list of options
-  function createListWrapper(select) {
+  function createcustomSelect(select) {
     var selectСlassList = select.classList;
-    var listWrapper = document.createElement('div');
-    listWrapper.classList.add('custom-select__wrapper');
-    listWrapper.setAttribute('tabindex', '-1');
+    var customSelect = document.createElement('div');
+    customSelect.classList.add('custom-select__wrapper');
+    customSelect.setAttribute('tabindex', '-1');
     for (var i = 0; i < selectСlassList.length; i++) {
-      listWrapper.classList.add(selectСlassList[i]);
+      customSelect.classList.add(selectСlassList[i]);
     }
-    listWrapper.appendChild(createSelectList(select));
-    return listWrapper;
+    customSelect.appendChild(createSelectList(select, customSelect));
+    return customSelect;
   }
   //In this cycle we go through each select and add listeners to its components
-  customSelects.forEach(function(select) {
+  customSelects.forEach(function(select, index) {
     //Create "not found" li for search functionality
     var notFound = document.createElement('li');
     notFound.classList.add('custom-select__option');
@@ -92,17 +92,19 @@ var atomicSelect = function(className) {
       notFound: notFound
     };
     //Assigne all elements for each instanse of custom select instances
-    select.parentElement.appendChild(createListWrapper(select));
+    var customSelect = createcustomSelect(select);
+
+    select.parentElement.insertBefore(customSelect, select);
     hideOriginalSelect(select);
-    var selectWrapper = select.parentElement;
-    var customSelect = selectWrapper.querySelector('.custom-select__wrapper');
     customSelect.setAttribute('tabindex', '0');
-    var selectList = selectWrapper.querySelector('.custom-select__list');
-    var selectInput = selectWrapper.querySelector('.custom-select__input');
-    var selectOptions = selectWrapper.querySelectorAll(
-      '.custom-select__option'
-    );
-    customSelect.insertBefore(selectInput, selectList);
+    var selectList = customSelect.querySelector('.custom-select__list');
+    var selectInput = customSelect.querySelector('.custom-select__input');
+    console.log(selectInput);
+    var selectOptions = customSelect.querySelectorAll('.custom-select__option');
+    customSelect.appendChild(selectInput);
+    if (select.disabled) {
+      selectInput.disabled = true;
+    }
 
     selectOptions.forEach(function(item) {
       state.options.push(item);
@@ -139,6 +141,9 @@ var atomicSelect = function(className) {
       state.status = state.status === 'closed' ? 'expanded' : 'closed';
       if (state.status === 'closed') {
         customSelect.focus();
+        selectInput.style.zIndex = 0;
+      } else {
+        selectInput.style.zIndex = 10;
       }
     }
     //Show our cussrent select value
@@ -352,5 +357,18 @@ var atomicSelect = function(className) {
         state.activOption = 'default';
       }
     });
+
+    // create an observer instance for original select disabled attribute
+    var observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        selectInput.disabled = select.disabled === true ? true : false;
+      });
+    });
+
+    // observer config: only attributes change
+    var config = { attributes: true, childList: false, characterData: false };
+
+    // observer listener foe our original select
+    observer.observe(select, config);
   });
 };
