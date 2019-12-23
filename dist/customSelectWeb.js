@@ -132,6 +132,8 @@ var atomicSelect = function(className) {
         option.dataset.selected = true;
         state.activeItem = option;
         select.value = option.dataset.value;
+        var event = new Event('change');
+        select.dispatchEvent(event);
         state.activOption = +option.dataset.count;
       }
     }
@@ -148,8 +150,11 @@ var atomicSelect = function(className) {
     }
     //Show our cussrent select value
     function showCurrentSelectPlaceholder() {
-      if (selectInput.placeholder !== select.value) {
-        selectInput.placeholder = select.value;
+      if (
+        state.activeItem &&
+        selectInput.placeholder !== state.activeItem.textContent
+      ) {
+        selectInput.placeholder = state.activeItem.textContent;
       }
     }
     //Render all items of our select
